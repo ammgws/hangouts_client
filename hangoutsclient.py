@@ -1,4 +1,4 @@
-# Imports from Python Standard Library
+# Standard library
 import logging
 import ssl
 from configparser import ConfigParser
