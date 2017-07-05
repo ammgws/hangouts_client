@@ -1,2 +1,4 @@
+pyasn1
+pyasn1_modules
 sleekxmpp
 git+git://github.com/ammgws/google_auth.git
