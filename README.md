@@ -14,3 +14,4 @@ hangouts = HangoutsClient(config_file, message)
 if hangouts.connect(address=('talk.google.com', 5222), reattempt=True, use_tls=True):
     hangouts.process(block=True)
 ```
+![](https://thumbs.gfycat.com/SnoopyMenacingIsabellinewheatear-size_restricted.gif)
