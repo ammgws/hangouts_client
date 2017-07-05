@@ -48,11 +48,11 @@ class HangoutsClient(ClientXMPP):
                             password=None,
                             sasl_mech='X-OAUTH2')
         self.auto_reconnect = True  # Restart stream in the event of an error
-        #: Max time to delay between reconnection attempts (in seconds)
+        # Max time to delay between reconnection attempts (in seconds)
         self.reconnect_max_delay = 300
 
         # Register XMPP plugins (order does not matter.)
-        # To do: remove unused plugins
+        # T: remove unused plugins
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0004')  # Data Forms
         self.register_plugin('xep_0199')  # XMPP Ping
