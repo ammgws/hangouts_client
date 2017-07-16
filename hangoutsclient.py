@@ -16,15 +16,15 @@ class HangoutsClient(ClientXMPP):
     roster, and then disconnecting.
     """
 
-    def __init__(self, config_path, message):
+    def __init__(self, config_filepath, message):
         # Initialise parameters
         self.message = message
 
         # Read in config values
         self.config = ConfigParser()
-        self.config.read(config_path)
-        self.config_path = config_path
-        logging.debug('Using config file: %s', config_path)
+        self.config.read(config_filepath)
+        self.config_filepath = config_filepath
+        logging.debug('Using config file: %s', config_filepath)
 
         # Get Hangouts OAUTH info from config file
         self.client_id = self.config.get('Hangouts', 'client_id')
@@ -34,7 +34,7 @@ class HangoutsClient(ClientXMPP):
         # Generate access token
         scope = ('https://www.googleapis.com/auth/googletalk '
                  'https://www.googleapis.com/auth/userinfo.email')
-        self.oauth = GoogleAuth(self.config_path, scope, service='Hangouts')
+        self.oauth = GoogleAuth(self.config_filepath, scope, service='Hangouts')
         self.oauth.google_authenticate()
 
         # Get email address for Hangouts login
