@@ -2,7 +2,6 @@
 import logging
 import ssl
 from configparser import ConfigParser
-from time import sleep
 # Third party imports
 from google_auth import GoogleAuth
 from sleekxmpp import ClientXMPP
@@ -16,10 +15,7 @@ class HangoutsClient(ClientXMPP):
     roster, and then disconnecting.
     """
 
-    def __init__(self, config_filepath, message):
-        # Initialise parameters
-        self.message = message
-
+    def __init__(self, config_filepath):
         # Read in config values
         self.config = ConfigParser()
         self.config.read(config_filepath)
@@ -35,10 +31,10 @@ class HangoutsClient(ClientXMPP):
         scope = ('https://www.googleapis.com/auth/googletalk '
                  'https://www.googleapis.com/auth/userinfo.email')
         self.oauth = GoogleAuth(self.config_filepath, scope, service='Hangouts')
-        self.oauth.google_authenticate()
+        self.oauth.authenticate()
 
         # Get email address for Hangouts login
-        hangouts_login_email = self.oauth.google_get_email()
+        hangouts_login_email = self.oauth.get_email()
         logging.debug('Going to login using: %s', hangouts_login_email)
 
         # Setup new SleekXMPP client to connect to Hangouts.
@@ -50,6 +46,7 @@ class HangoutsClient(ClientXMPP):
         self.auto_reconnect = True  # Restart stream in the event of an error
         # Max time to delay between reconnection attempts (in seconds)
         self.reconnect_max_delay = 300
+        self.use_ipv6 = False  # not supported by Hangouts
 
         # Register XMPP plugins (order does not matter.)
         # T: remove unused plugins
@@ -82,7 +79,7 @@ class HangoutsClient(ClientXMPP):
         and the client is stopped. Get around this by updating the access
         token whenever the client establishes a connection to the server.
         """
-        self.oauth.google_authenticate()
+        self.oauth.authenticate()
         self.credentials['access_token'] = self.oauth.access_token
 
     def invalid_cert(self, pem_cert):
@@ -99,8 +96,7 @@ class HangoutsClient(ClientXMPP):
         """
         Process the session_start event.
 
-        Broadcast initial presence stanza, request the roster,
-        and then send the message to the specified user(s).
+        Broadcast initial presence stanza and request the roster.
 
         Args:
             event -- An empty dictionary. The session_start event does not
@@ -121,18 +117,35 @@ class HangoutsClient(ClientXMPP):
             logging.error('Server is taking too long to respond')
             self.disconnect(send_close=False)
 
-        # Wait for presence stanzas to be received, otherwise roster will be empty
-        sleep(5)
+    def in_roster(self, recipient):
+        # TODO: come up with a cleaner way for this and `send_to` function
+        if '@public.talk.google.com' in recipient:
+            if recipient in self.client_roster:
+                return True, recipient
+        else:
+            # If recipient is given by name, we need to check each client's name field
+            # Note this is not guaranteed to be unique!
+            for client in self.client_roster:
+                if self.client_roster[client]['name'] == recipient:
+                    return True, client
 
+        return False
+
+    def send_to(self, recipient_list, message):
+        # Send message to specified user(s)
+        for recipient in recipient_list:
+            check = self.in_roster(recipient)
+            if check[0] is True:
+                logging.info('Sending to: %s (%s)', recipient, check[1])
+                self.send_message(mto=check[1], mbody=message, mtype='chat')
+            else:
+                logging.info('Recipient %s not found in roster', recipient)
+
+    def send_to_all(self, message):
         # Send message to each user found in the roster
         num_users = 0
         for recipient in self.client_roster:
             if recipient != self.boundjid:
                 num_users += 1
                 logging.info('Sending to: %s (%s)', self.client_roster[recipient]['name'], recipient)
-                self.send_message(mto=recipient, mbody=self.message, mtype='chat')
-
-        logging.info('Sent message to %s users in roster', num_users)
-
-        # Wait for all message stanzas to be sent before disconnecting
-        self.disconnect(wait=True)
+                self.send_message(mto=recipient, mbody=message, mtype='chat')

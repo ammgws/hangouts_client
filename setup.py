@@ -8,7 +8,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='hangouts_client',
-    version='0.1.0',
+    version='0.1.2',
     description='Class for sending/receiving messages using Hangouts',
     long_description=long_description,
     url='https://github.com/ammgws/hangouts_client',
