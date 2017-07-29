@@ -129,7 +129,7 @@ class HangoutsClient(ClientXMPP):
                 if self.client_roster[client]['name'] == recipient:
                     return True, client
 
-        return False
+        return False, recipient
 
     def send_to(self, recipient_list, message):
         # Send message to specified user(s)
