@@ -1,6 +1,7 @@
 # Standard library
 import logging
 import ssl
+# import threading
 from configparser import ConfigParser
 # Third party imports
 from google_auth import GoogleAuth
@@ -39,17 +40,17 @@ class HangoutsClient(ClientXMPP):
 
         # Setup new SleekXMPP client to connect to Hangouts.
         # Not passing in actual password since using OAUTH2 to login
-        ClientXMPP.__init__(self,
-                            jid=hangouts_login_email,
-                            password=None,
-                            sasl_mech='X-OAUTH2')
+        super().__init__(jid=hangouts_login_email, password=None, sasl_mech='X-OAUTH2')
         self.auto_reconnect = True  # Restart stream in the event of an error
-        # Max time to delay between reconnection attempts (in seconds)
-        self.reconnect_max_delay = 300
-        self.use_ipv6 = False  # not supported by Hangouts
+        self.reconnect_max_delay = 1  # Max time to delay between reconnection attempts (secs)
+        self.use_ipv6 = False  # Not supported by Hangouts
+
+        # TODO: roster ready notification
+        # Used to indicate when roster has been fetched and thus messaging can proceed.
+        #self.ready = threading.Event()
 
         # Register XMPP plugins (order does not matter.)
-        # T: remove unused plugins
+        # TODO: remove unused plugins
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0004')  # Data Forms
         self.register_plugin('xep_0199')  # XMPP Ping
@@ -117,6 +118,11 @@ class HangoutsClient(ClientXMPP):
             logging.error('Server is taking too long to respond')
             self.disconnect(send_close=False)
 
+        # TODO: roster ready notification
+        # while len(self.client_roster) < 2:
+        #     pass
+        # self.ready.set()
+
     def in_roster(self, recipient):
         # TODO: come up with a cleaner way for this and `send_to` function
         if '@public.talk.google.com' in recipient:
@@ -133,6 +139,7 @@ class HangoutsClient(ClientXMPP):
 
     def send_to(self, recipient_list, message):
         # Send message to specified user(s)
+        logging.info('Message to send: %s', message)
         for recipient in recipient_list:
             check = self.in_roster(recipient)
             if check[0] is True:
@@ -143,9 +150,16 @@ class HangoutsClient(ClientXMPP):
 
     def send_to_all(self, message):
         # Send message to each user found in the roster
+        logging.info('Message to send: %s', message)
         num_users = 0
         for recipient in self.client_roster:
             if recipient != self.boundjid:
                 num_users += 1
                 logging.info('Sending to: %s (%s)', self.client_roster[recipient]['name'], recipient)
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
+
+    def connect(self):
+        return super().connect(address=('talk.google.com', 5222),
+                               reattempt=True, use_tls=True)
+
+
