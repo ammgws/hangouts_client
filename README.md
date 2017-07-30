@@ -11,7 +11,15 @@ e.g. Setup Hangouts bot instance, connect and send message:
 config_file = '/path/to/config.ini'
 message = 'Hello world!'
 hangouts = HangoutsClient(config_file, message)
-if hangouts.connect(address=('talk.google.com', 5222), reattempt=True, use_tls=True):
-    hangouts.process(block=True)
+if hangouts.connect():
+    hangouts.process(block=False)
+else:
+    print('Failed to connect to Hangouts!')
+time.sleep(5)  # give time for roster to be fetched
+hangouts.send_to_all('Hope you enjoyed my stories.')
+hangouts.send_to(['Itiot Anton', ], 'Hey when is your wedding?')
+hangouts.send_to(['ahf9v8qah4wfnasd@public.talk.google.com', ], 'Wake up')
+hangouts.disconnect(wait=True)
 ```
+Outdated gif:
 ![](https://thumbs.gfycat.com/SnoopyMenacingIsabellinewheatear-size_restricted.gif)
