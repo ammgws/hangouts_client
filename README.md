@@ -9,8 +9,7 @@ Class for sending/receiving messages on Google Hangouts (auth via OAUTH).
 e.g. Setup Hangouts bot instance, connect and send message:
 ```
 config_file = '/path/to/config.ini'
-message = 'Hello world!'
-hangouts = HangoutsClient(config_file, message)
+hangouts = HangoutsClient(config_file)
 if hangouts.connect():
     hangouts.process(block=False)
 else:
