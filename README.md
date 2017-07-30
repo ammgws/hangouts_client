@@ -15,8 +15,11 @@ if hangouts.connect():
 else:
     print('Failed to connect to Hangouts!')
 time.sleep(5)  # give time for roster to be fetched
+# Sends to all Hngouts cDontacts found online: 
 hangouts.send_to_all('Hope you enjoyed my stories.')
+# Send to Hangouts user specified by full name:
 hangouts.send_to(['Itiot Anton', ], 'Hey when is your wedding?')
+# Send to Hangouts user specified by :
 hangouts.send_to(['ahf9v8qah4wfnasd@public.talk.google.com', ], 'Wake up')
 hangouts.disconnect(wait=True)
 ```
