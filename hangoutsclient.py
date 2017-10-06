@@ -11,8 +11,7 @@ from sleekxmpp.xmlstream import cert
 
 
 class HangoutsClient(ClientXMPP):
-    """
-    Class for sending messages via Google Hangouts.
+    """Class for sending messages via Google Hangouts.
     """
 
     def __init__(self, client_id, client_secret, refresh_token_file=None):
@@ -36,7 +35,7 @@ class HangoutsClient(ClientXMPP):
 
         # Get email address for Hangouts login
         hangouts_login_email = self.oauth.get_email()
-        logging.debug('Going to login using: %s', hangouts_login_email)
+        logging.debug('Going to login using %s', hangouts_login_email)
 
         # Setup new SleekXMPP client to connect to Hangouts.
         # Not passing in actual password since using OAUTH2 to login
@@ -61,7 +60,7 @@ class HangoutsClient(ClientXMPP):
         # initialize our roster. Need threaded=True so that the session_start
         # handler doesn't block event processing while we wait for presence
         # stanzas to arrive.
-        self.add_event_handler("session_start", self.start, threaded=True)
+        self.add_event_handler('session_start', self.start, threaded=True)
 
         # Triggered whenever a 'connected' XMPP event is stanza is received,
         # in particular when connection to XMPP server is established.
@@ -72,10 +71,10 @@ class HangoutsClient(ClientXMPP):
         # contain the custom domain, just the Hangouts server name. So we will
         # need to process invalid certificates ourselves and check that it
         # really is from Google.
-        self.add_event_handler("ssl_invalid_cert", self.invalid_cert)
+        self.add_event_handler('ssl_invalid_cert', self.invalid_cert)
 
     def reconnect_workaround(self, event):  # pylint: disable=W0613
-        """ Workaround for SleekXMPP reconnect.
+        """Workaround for SleekXMPP reconnect.
         If a reconnect is attempted after access token is expired, auth fails
         and the client is stopped. Get around this by updating the access
         token whenever the client establishes a connection to the server.
@@ -84,18 +83,17 @@ class HangoutsClient(ClientXMPP):
         self.credentials['access_token'] = self.oauth.access_token
 
     def invalid_cert(self, pem_cert):
-        """ Verify that certificate originates from Google. """
+        """Verify that certificate originates from Google."""
         der_cert = ssl.PEM_cert_to_DER_cert(pem_cert)
         try:
             cert.verify('talk.google.com', der_cert)
-            logging.debug("Found Hangouts certificate")
+            logging.debug('Found Hangouts certificate.')
         except cert.CertificateError as err:
             logging.error(err)
             self.disconnect(send_close=False)
 
     def start(self, event):  # pylint: disable=W0613
-        """
-        Process the session_start event.
+        """Process the session_start event.
 
         Broadcast initial presence stanza and request the roster.
 
@@ -104,18 +102,18 @@ class HangoutsClient(ClientXMPP):
                      provide any additional data.
         """
 
-        # Broadcast initial presence stanza
+        # Broadcast initial presence stanza.
         self.send_presence()
 
-        # Request the roster
+        # Request the roster.
         try:
             self.get_roster()
         except IqError as err:
-            logging.error('There was an error getting the roster')
+            logging.error('There was an error getting the roster.')
             logging.error(err.iq['error']['condition'])
             self.disconnect()
         except IqTimeout:
-            logging.error('Server is taking too long to respond')
+            logging.error('Server is taking too long to respond.')
             self.disconnect(send_close=False)
 
         # TODO: roster ready notification
@@ -129,7 +127,7 @@ class HangoutsClient(ClientXMPP):
             if recipient in self.client_roster:
                 return True, recipient
         else:
-            # If recipient is given by name, we need to check each client's name field
+            # If recipient is given by name, we need to check each client's name field.
             # Note this is not guaranteed to be unique!
             for client in self.client_roster:
                 if self.client_roster[client]['name'] == recipient:
@@ -155,11 +153,9 @@ class HangoutsClient(ClientXMPP):
         for recipient in self.client_roster:
             if recipient != self.boundjid:
                 num_users += 1
-                logging.info('Sending to: %s (%s)', self.client_roster[recipient]['name'], recipient)
+                logging.info('Sending to %s (%s)', self.client_roster[recipient]['name'], recipient)
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
 
     def connect(self):
         return super().connect(address=('talk.google.com', 5222),
                                reattempt=True, use_tls=True)
-
-
