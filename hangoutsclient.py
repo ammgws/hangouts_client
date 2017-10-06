@@ -1,8 +1,8 @@
 # Standard library
 import logging
+import os.path
 import ssl
 # import threading
-from configparser import ConfigParser
 # Third party imports
 from google_auth import GoogleAuth
 from sleekxmpp import ClientXMPP
@@ -15,22 +15,23 @@ class HangoutsClient(ClientXMPP):
     Class for sending messages via Google Hangouts.
     """
 
-    def __init__(self, config_filepath):
-        # Read in config values
-        self.config = ConfigParser()
-        self.config.read(config_filepath)
-        self.config_filepath = config_filepath
-        logging.debug('Using config file: %s', config_filepath)
+    def __init__(self, client_id, client_secret, refresh_token_file=None):
+        self.client_id = client_id
+        self.client_secret = client_secret
 
-        # Get Hangouts OAUTH info from config file
-        self.client_id = self.config.get('Hangouts', 'client_id')
-        self.client_secret = self.config.get('Hangouts', 'client_secret')
-        self.refresh_token = self.config.get('Hangouts', 'refresh_token')
+        self.refresh_token_file = refresh_token_file
+        if refresh_token_file and os.path.isfile(self.refresh_token_file):
+            with open(self.refresh_token_file) as file:
+                self.refresh_token = file.read()
+        else:
+            self.refresh_token = None
 
         # Generate access token
-        scope = ('https://www.googleapis.com/auth/googletalk '
-                 'https://www.googleapis.com/auth/userinfo.email')
-        self.oauth = GoogleAuth(self.config_filepath, scope, service='Hangouts')
+        scopes = [
+            'https://www.googleapis.com/auth/googletalk',
+            'https://www.googleapis.com/auth/userinfo.email',
+        ]
+        self.oauth = GoogleAuth(self.client_id, self.client_secret, scopes, self.refresh_token_file)
         self.oauth.authenticate()
 
         # Get email address for Hangouts login
