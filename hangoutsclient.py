@@ -14,23 +14,13 @@ class HangoutsClient(ClientXMPP):
     """Class for sending messages via Google Hangouts.
     """
 
-    def __init__(self, client_id, client_secret, refresh_token_file=None):
-        self.client_id = client_id
-        self.client_secret = client_secret
-
-        self.refresh_token_file = refresh_token_file
-        if refresh_token_file and os.path.isfile(self.refresh_token_file):
-            with open(self.refresh_token_file) as file:
-                self.refresh_token = file.read()
-        else:
-            self.refresh_token = None
-
-        # Generate access token
+    def __init__(self, client_id, client_secret, token_file=None, send_only=True):
+        # Authorise OAuth instance
         scopes = [
             'https://www.googleapis.com/auth/googletalk',
             'https://www.googleapis.com/auth/userinfo.email',
         ]
-        self.oauth = GoogleAuth(self.client_id, self.client_secret, scopes, self.refresh_token_file)
+        self.oauth = GoogleAuth(client_id, client_secret, scopes, token_file)
         self.oauth.authenticate()
 
         # Get email address for Hangouts login
@@ -73,6 +63,10 @@ class HangoutsClient(ClientXMPP):
         # really is from Google.
         self.add_event_handler('ssl_invalid_cert', self.invalid_cert)
 
+        if not send_only:
+            self.add_event_handler('message', self.message)
+            self.last_received_from = ''
+
     def reconnect_workaround(self, event):  # pylint: disable=W0613
         """Workaround for SleekXMPP reconnect.
         If a reconnect is attempted after access token is expired, auth fails
@@ -81,6 +75,20 @@ class HangoutsClient(ClientXMPP):
         """
         self.oauth.authenticate()
         self.credentials['access_token'] = self.oauth.access_token
+
+    def message(self, msg):
+        """
+        Process incoming message stanzas. Be aware that this also
+        includes MUC messages and error messages. It is usually
+        a good idea to check the message type before processing
+        or sending replies.
+
+        Args:
+            msg -- The received message stanza. See SleekXMPP documentation
+                   for stanza objects and the Message stanza to see
+                   how it may be used.
+        """
+        pass
 
     def invalid_cert(self, pem_cert):
         """Verify that certificate originates from Google."""
