@@ -54,7 +54,7 @@ class HangoutsClient(ClientXMPP):
         # contain the custom domain, just the Hangouts server name. So we will
         # need to process invalid certificates ourselves and check that it
         # really is from Google.
-        self.add_event_handler('ssl_invalid_cert', self.invalid_cert)
+        self.add_event_handler('ssl_invalid_cert', self.verify_cert)
 
         if not send_only:
             self.add_event_handler('message', self.message)
@@ -83,7 +83,7 @@ class HangoutsClient(ClientXMPP):
         """
         pass
 
-    def invalid_cert(self, pem_cert):
+    def verify_cert(self, pem_cert):
         """Verify that certificate originates from Google."""
         der_cert = ssl.PEM_cert_to_DER_cert(pem_cert)
         try:
@@ -148,10 +148,8 @@ class HangoutsClient(ClientXMPP):
     def send_to_all(self, message):
         # Send message to each user found in the roster
         logging.info('Message to send: %s', message)
-        num_users = 0
         for recipient in self.client_roster:
             if recipient != self.boundjid:
-                num_users += 1
                 logging.info('Sending to %s (%s)', self.client_roster[recipient]['name'], recipient)
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
 
