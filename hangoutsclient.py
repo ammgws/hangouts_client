@@ -119,17 +119,21 @@ class HangoutsClient(ClientXMPP):
         #     pass
         # self.ready.set()
 
+    @property
+    def contacts_list(self):
+        return self.client_roster
+
     def in_roster(self, recipient):
         # TODO: come up with a cleaner way for this and `send_to` function
         if '@public.talk.google.com' in recipient:
-            if recipient in self.client_roster:
+            if recipient in self.contacts_list:
                 return True, recipient
         else:
             # If recipient is given by name, we need to check each client's name field.
             # Note this is not guaranteed to be unique!
-            for client in self.client_roster:
-                if self.client_roster[client]['name'] == recipient:
-                    return True, client
+            for contact in self.contacts_list:
+                if self.contacts_list[contact]['name'] == recipient:
+                    return True, contact
 
         return False, recipient
 
