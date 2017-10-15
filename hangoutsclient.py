@@ -137,10 +137,14 @@ class HangoutsClient(ClientXMPP):
 
         return False, recipient
 
-    def send_to(self, recipient_list, message):
-        # Send message to specified user(s)
+    def send_to(self, recipients, message):
         logging.info('Message to send: %s', message)
-        for recipient in recipient_list:
+
+        # Allow a single recipient to be passed as a string instead of throwing an exception.
+        if isinstance(recipients, str):
+            recipients = [recipients]
+
+        for recipient in recipients:
             check = self.in_roster(recipient)
             if check[0] is True:
                 logging.info('Sending to: %s (%s)', recipient, check[1])
