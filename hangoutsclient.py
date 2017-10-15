@@ -57,7 +57,7 @@ class HangoutsClient(ClientXMPP):
         self.add_event_handler('ssl_invalid_cert', self.verify_cert)
 
         if not send_only:
-            self.add_event_handler('message', self.message)
+            self.add_event_handler('message', self._message)
             self.last_received_from = ''
 
     def reconnect_workaround(self, event):
@@ -69,18 +69,17 @@ class HangoutsClient(ClientXMPP):
         self.oauth.authenticate()
         self.credentials['access_token'] = self.oauth.access_token
 
-    def message(self, msg):
-        """
-        Process incoming message stanzas. Be aware that this also
-        includes MUC messages and error messages. It is usually
-        a good idea to check the message type before processing
-        or sending replies.
+    def _message(self, msg):
+        """Process incoming message stanzas.
 
         Args:
-            msg -- The received message stanza. See SleekXMPP documentation
-                   for stanza objects and the Message stanza to see
-                   how it may be used.
+            msg -- The received message stanza as SleekXMPP Message object.
         """
+        if msg['type'] in ('chat', 'normal'):
+            self.message(msg['from'].bare, msg['body'])
+
+    def message(self, sender, text):
+        """Override this method."""
         pass
 
     def verify_cert(self, pem_cert):
