@@ -1,8 +1,5 @@
-# Standard library
 import logging
-import os.path
 import ssl
-# import threading
 # Third party imports
 from google_auth import GoogleAuth
 from sleekxmpp import ClientXMPP
