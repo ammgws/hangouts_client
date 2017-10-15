@@ -12,7 +12,6 @@ class HangoutsClient(ClientXMPP):
     """
 
     def __init__(self, client_id, client_secret, token_file=None, send_only=True):
-        # Authorise OAuth instance
         scopes = [
             'https://www.googleapis.com/auth/googletalk',
             'https://www.googleapis.com/auth/userinfo.email',
@@ -20,11 +19,9 @@ class HangoutsClient(ClientXMPP):
         self.oauth = GoogleAuth(client_id, client_secret, scopes, token_file)
         self.oauth.authenticate()
 
-        # Get email address for Hangouts login
         hangouts_login_email = self.oauth.get_email()
         logging.debug('Going to login using %s', hangouts_login_email)
 
-        # Setup new SleekXMPP client to connect to Hangouts.
         # Not passing in actual password since using OAUTH2 to login
         super().__init__(jid=hangouts_login_email, password=None, sasl_mech='X-OAUTH2')
         self.auto_reconnect = True  # Restart stream in the event of an error
@@ -35,7 +32,6 @@ class HangoutsClient(ClientXMPP):
         # Used to indicate when roster has been fetched and thus messaging can proceed.
         #self.ready = threading.Event()
 
-        # Register XMPP plugins (order does not matter.)
         # TODO: remove unused plugins
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0004')  # Data Forms
@@ -64,7 +60,7 @@ class HangoutsClient(ClientXMPP):
             self.add_event_handler('message', self.message)
             self.last_received_from = ''
 
-    def reconnect_workaround(self, event):  # pylint: disable=W0613
+    def reconnect_workaround(self, event):
         """Workaround for SleekXMPP reconnect.
         If a reconnect is attempted after access token is expired, auth fails
         and the client is stopped. Get around this by updating the access
@@ -97,10 +93,8 @@ class HangoutsClient(ClientXMPP):
             logging.error(err)
             self.disconnect(send_close=False)
 
-    def start(self, event):  # pylint: disable=W0613
-        """Process the session_start event.
-
-        Broadcast initial presence stanza and request the roster.
+    def start(self, event):
+        """Process the session_start event. Broadcasts initial presence stanza and then requests the roster.
 
         Args:
             event -- An empty dictionary. The session_start event does not
