@@ -73,13 +73,20 @@ class HangoutsClient(ClientXMPP):
         """Process incoming message stanzas.
 
         Args:
-            msg -- The received message stanza as SleekXMPP Message object.
+            msg -- The received message stanza (SleekXMPP Message object)
         """
         if msg['type'] in ('chat', 'normal'):
-            self.message(msg['from'].bare, msg['body'])
+            self.message(msg, msg['from'].bare, msg['body'])
 
-    def message(self, sender, text):
-        """Override this method."""
+    def message(self, msg_obj, sender, text):
+        """Override this method.
+
+        Args:
+            msg_obj -- The received message stanza (SleekXMPP Message object).
+                       Use this to reply to messages.
+            sender -- The username of the sender (string)
+            text -- The message received (string)
+        """
         pass
 
     def verify_cert(self, pem_cert):
