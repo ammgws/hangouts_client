@@ -144,20 +144,14 @@ class HangoutsClient(ClientXMPP):
 
         return False, recipient
 
-    def send_to(self, recipients, message):
+    def send_to(self, recipient, message):
         logging.info('Message to send: %s', message)
-
-        # Allow a single recipient to be passed as a string instead of throwing an exception.
-        if isinstance(recipients, str):
-            recipients = [recipients]
-
-        for recipient in recipients:
-            check = self.in_roster(recipient)
-            if check[0] is True:
-                logging.info('Sending to: %s (%s)', recipient, check[1])
-                self.send_message(mto=check[1], mbody=message, mtype='chat')
-            else:
-                logging.info('Recipient %s not found in roster', recipient)
+        check = self.in_roster(recipient)
+        if check[0] is True:
+            logging.info('Sending to: %s (%s)', recipient, check[1])
+            self.send_message(mto=check[1], mbody=message, mtype='chat')
+        else:
+            logging.info('Recipient %s not found in roster', recipient)
 
     def send_to_all(self, message):
         # Send message to each user found in the roster
